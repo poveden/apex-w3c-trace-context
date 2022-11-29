@@ -1,18 +1,29 @@
-# Salesforce DX Project: Next Steps
+# W3C Trace Context helper classes for Salesforce
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+## Usage
 
-## How Do You Plan to Deploy Your Changes?
+```java
+@RestResource(urlMapping='/Account/*')
+global with sharing class MyRestResource {
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+    @HttpPost
+    global static String doPost(String name, String phone, String website) {
+        // Capture the caller's trace context
+        W3CTraceContext ctx = W3CTraceContext.fromRequest(RestContext.request);
 
-## Configure Your Salesforce DX Project
+        // Use the trace context (e.g. for logging)
+        System.debug(loggingLevel.INFO, 'Trace ID: ' + ctx.getTraceParent().getTraceId());
+        System.debug(loggingLevel.INFO, 'Parent ID: ' + ctx.getTraceParent().getParentId());
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+        // Propagate the trace context to external dependencies
+        HttpRequest req = new HttpRequest();
+        ctx.propagate(req, true);
+        req.setEndpoint('http://www.yahoo.com');
+        req.setMethod('GET');
+    }
+}
+```
 
-## Read All About It
+## Resources
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+- [W3C Trace Context](https://www.w3.org/TR/trace-context/)
